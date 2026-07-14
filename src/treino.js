@@ -1,6 +1,16 @@
 import { EXERCISE_DETAILS, EXERCISES_BY_DAY } from './data/exercises.js';
 import { loadDay, saveDay, dateStr, dateKey } from './utils/storage.js';
 
+/* ── State ── (must be before any top-level code) */
+let currentIdx = 0;
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
+let timerDone = false;
+let metronomeActive = false;
+let metronomeInterval = null;
+let audioCtx = null;
+
 const params = new URLSearchParams(window.location.search);
 const dateStrParam = params.get('date');
 const workoutDate = dateStrParam ? new Date(dateStrParam + 'T00:00:00') : new Date();
@@ -28,16 +38,6 @@ function parseSegundos(str) {
 function buildTimerHTML(s) {
   return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 }
-
-/* ── State ── */
-let currentIdx = 0;
-let timerInterval = null;
-let timerSeconds = 0;
-let timerRunning = false;
-let timerDone = false;
-let metronomeActive = false;
-let metronomeInterval = null;
-let audioCtx = null;
 
 /* ── Metronome ── */
 function initAudio() {
@@ -280,7 +280,6 @@ function render() {
 }
 
 function initWorkout() {
-  console.log('[treino] initWorkout called, exercises:', exercises.length);
   if (timerSeconds === 0) {
     timerSeconds = parseSegundos(exercises[0].descanso);
   }

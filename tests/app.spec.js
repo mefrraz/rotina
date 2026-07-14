@@ -110,7 +110,7 @@ test.describe('Página de treino guiado', () => {
   });
 
   test('dia de descanso mostra mensagem', async ({ page }) => {
-    await page.goto('/treino.html?date=2026-07-19'); // Domingo = descanso
+    await page.goto('/treino.html?date=2026-07-18'); // Sábado = descanso
     await page.waitForTimeout(500);
     await expect(page.locator('.finish-screen')).toBeVisible({ timeout: 10000 });
   });
