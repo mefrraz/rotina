@@ -181,16 +181,14 @@
     padding: 0.3rem 0;
   }
 
-  /* ── Landscape mode ── */
-  @media (orientation: landscape) {
-    .workout-wrap {
-      max-width: 100%;
-      flex-direction: row;
-      gap: 1rem;
-      padding: 1rem 1.25rem 1.5rem;
-    }
-    .wo-topbar { grid-column: 1/-1; }
+  /* ── Landscape + Desktop ── */
+  @media (orientation: landscape), (min-width: 768px) {
+    .workout-wrap { max-width: 900px; }
     .wo-progress, .wo-counter { display: none; }
+    .wo-main {
+      display: flex; flex-direction: row; gap: 1rem;
+      flex: 1;
+    }
     .wo-card {
       flex: 1.2;
       max-height: none;
@@ -200,6 +198,10 @@
       display: flex; flex-direction: column;
       justify-content: center;
       gap: 0.75rem;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
     }
     .wo-timer-display { font-size: 48px; }
     .wo-actions { padding-top: 0; }

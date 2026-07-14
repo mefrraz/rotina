@@ -221,39 +221,45 @@ function render() {
       '<div class="wo-counter">' + completed + ' de ' + total + ' concluídos</div>' +
       '<div class="wo-progress"><div class="wo-progress-fill" style="width:' + (completed / total * 100) + '%"></div></div>' +
 
-      /* exercise card */
-      '<div class="wo-card">' +
-        '<h2>' + ex.n + '</h2>' +
-        '<div class="wo-series">' + ex.series + '</div>' +
-        '<div class="wo-how">' + ex.comoFazer + '</div>' +
+      /* main: card + side */
+      '<div class="wo-main">' +
+        /* exercise card */
+        '<div class="wo-card">' +
+          '<h2>' + ex.n + '</h2>' +
+          '<div class="wo-series">' + ex.series + '</div>' +
+          '<div class="wo-how">' + ex.comoFazer + '</div>' +
+        '</div>' +
 
-        /* timer */
-        '<div class="wo-timer">' +
-          '<div class="wo-timer-label">⏱️ Descanso</div>' +
-          '<div class="wo-timer-display" id="timerDisplay">' + buildTimerHTML(timerSeconds || rest) + '</div>' +
-          '<div class="wo-timer-ctrls" id="timerCtrls">' +
-            '<button class="primary" onclick="window.woStart(' + rest + ')">Iniciar</button>' +
-            '<button onclick="window.woReset(' + rest + ')">Repor</button>' +
+        /* side panel */
+        '<div class="wo-side">' +
+          /* timer */
+          '<div class="wo-timer">' +
+            '<div class="wo-timer-label">⏱️ Descanso</div>' +
+            '<div class="wo-timer-display" id="timerDisplay">' + buildTimerHTML(timerSeconds || rest) + '</div>' +
+            '<div class="wo-timer-ctrls" id="timerCtrls">' +
+              '<button class="primary" onclick="window.woStart(' + rest + ')">Iniciar</button>' +
+              '<button onclick="window.woReset(' + rest + ')">Repor</button>' +
+            '</div>' +
+          '</div>' +
+
+          /* metronome */
+          '<div class="wo-metronome">' +
+            '<button id="metroBtn" onclick="toggleMetronome()">🔊 Metrónomo</button>' +
+            '<div class="metronome-dot" id="metroDot"></div>' +
+          '</div>' +
+
+          /* actions */
+          '<div class="wo-actions">' +
+            (done
+              ? '<div class="wo-done-check">✅ Feito</div>'
+              : '<button class="wo-btn wo-btn-done" id="btnDone">Marcar como feito</button>') +
+            (!done
+              ? ''
+              : (isLast
+                ? '<button class="wo-btn wo-btn-finish" id="btnFinish">🏁 Terminar treino</button>'
+                : '<button class="wo-btn wo-btn-next" id="btnNext">Próximo exercício ›</button>')) +
           '</div>' +
         '</div>' +
-
-        /* metronome */
-        '<div class="wo-metronome">' +
-          '<button id="metroBtn" onclick="toggleMetronome()">🔊 Metrónomo</button>' +
-          '<div class="metronome-dot" id="metroDot"></div>' +
-        '</div>' +
-      '</div>' +
-
-      /* actions */
-      '<div class="wo-actions">' +
-        (done
-          ? '<div class="wo-done-check">✅ Feito</div>'
-          : '<button class="wo-btn wo-btn-done" id="btnDone">Marcar como feito</button>') +
-        (!done
-          ? ''
-          : (isLast
-            ? '<button class="wo-btn wo-btn-finish" id="btnFinish">🏁 Terminar treino</button>'
-            : '<button class="wo-btn wo-btn-next" id="btnNext">Próximo exercício ›</button>')) +
       '</div>' +
     '</div>';
 
@@ -274,6 +280,7 @@ function render() {
 }
 
 function initWorkout() {
+  console.log('[treino] initWorkout called, exercises:', exercises.length);
   if (timerSeconds === 0) {
     timerSeconds = parseSegundos(exercises[0].descanso);
   }
