@@ -1,287 +1,84 @@
-import { EXERCISE_DETAILS, EXERCISES_BY_DAY } from './data/exercises.js';
-import { loadDay, saveDay, dateStr, dateKey } from './utils/storage.js';
+import { EXERCISE_DETAILS, EXERCISES_BY_DAY } from './data.js';
+import { load, save, dateStr } from './storage.js';
 
-/* ── State ── (must be before any top-level code) */
-let currentIdx = 0;
-let timerInterval = null;
-let timerSeconds = 0;
-let timerRunning = false;
-let timerDone = false;
-let metronomeActive = false;
-let metronomeInterval = null;
-let audioCtx = null;
+/* ── Init ── */
+const Q = new URLSearchParams(location.search);
+const d = Q.get('date') ? new Date(Q.get('date')+'T00:00:00') : new Date(); d.setHours(0,0,0,0);
+const ids = EXERCISES_BY_DAY[d.getDay()] || [];
+const exs = ids.map(id => ({...EXERCISE_DETAILS[id], id}));
+const ds = dateStr(d);
 
-const params = new URLSearchParams(window.location.search);
-const dateStrParam = params.get('date');
-const workoutDate = dateStrParam ? new Date(dateStrParam + 'T00:00:00') : new Date();
-workoutDate.setHours(0, 0, 0, 0);
-
-const dayIndex = workoutDate.getDay();
-const exerciseIds = EXERCISES_BY_DAY[dayIndex] || [];
-const exercises = exerciseIds.map(id => ({ ...EXERCISE_DETAILS[id], id }));
-
-if (exercises.length === 0) {
+if (!exs.length) {
   document.getElementById('app').innerHTML =
-    '<div class="workout-wrap">' +
-    '<div class="wo-topbar"><a class="wo-back" href="/">&lsaquo;</a></div>' +
-    '<div class="finish-screen"><div class="big">😴</div><h2>Dia de descanso</h2><p>Sem treino hoje. Aproveita para recuperar.</p>' +
-    '<a href="/">Voltar</a></div></div>';
-} else {
-  initWorkout();
-}
+    '<div class="wo"><div class="wo-top"><a class="wo-back" href="/">&lsaquo;</a></div>' +
+    '<div class="wo-end"><div class="big">😴</div><h2>Dia de descanso</h2><p>Sem treino hoje.</p><a href="/">Voltar</a></div></div>';
+} else { init(); }
 
-function parseSegundos(str) {
-  const m = str.match(/(\d+)/);
-  return m ? parseInt(m[1]) : 60;
-}
+/* ── State ── */
+let idx = 0, tIv = null, tSec = 0, tRun = false, tEnd = false;
+let metroOn = false, metroIv = null, actx = null;
 
-function buildTimerHTML(s) {
-  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-}
+/* ── Helpers ── */
+function sec(s) { const m = s.match(/(\d+)/); return m ? +m[1] : 60; }
+function fmt(s) { return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
 
 /* ── Metronome ── */
-function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-
 function beep() {
-  if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.type = 'sine';
-  osc.frequency.value = 800;
-  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-  osc.start(audioCtx.currentTime);
-  osc.stop(audioCtx.currentTime + 0.1);
-  // Pulse the dot
-  const dot = document.getElementById('metroDot');
-  if (dot) {
-    dot.classList.add('beat');
-    setTimeout(() => dot.classList.remove('beat'), 150);
-  }
+  if (!actx) return;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.connect(g); g.connect(actx.destination);
+  o.type='sine'; o.frequency.value=800;
+  g.gain.setValueAtTime(.3,actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.1);
+  o.start(actx.currentTime); o.stop(actx.currentTime+.1);
+  const dot = document.getElementById('metroDot'); if (dot) { dot.classList.add('beat'); setTimeout(()=>dot.classList.remove('beat'),150); }
 }
-
-function startMetronome() {
-  initAudio();
-  metronomeActive = true;
-  beep();
-  // Beat every 1.5s (half of 3s cycle): descent beat + ascent beat
-  let phase = 0;
-  metronomeInterval = setInterval(() => {
-    if (!metronomeActive) return;
-    beep();
-    if (navigator.vibrate) navigator.vibrate(30);
-    phase++;
-  }, 1500);
-  updateMetronomeUI();
-}
-
-function stopMetronome() {
-  metronomeActive = false;
-  if (metronomeInterval) { clearInterval(metronomeInterval); metronomeInterval = null; }
-  updateMetronomeUI();
-}
-
-function toggleMetronome() {
-  if (metronomeActive) stopMetronome();
-  else startMetronome();
-}
-
-function updateMetronomeUI() {
-  const btn = document.getElementById('metroBtn');
-  if (btn) {
-    btn.textContent = metronomeActive ? '⏸️ Metrónomo' : '🔊 Metrónomo';
-    btn.className = metronomeActive ? 'active' : '';
-  }
-}
+function metroStart() { if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)(); metroOn=true; beep(); metroIv=setInterval(()=>{if(!metroOn)return;beep();if(navigator.vibrate)navigator.vibrate(30)},1500); updateMetro(); }
+function metroStop() { metroOn=false; if(metroIv){clearInterval(metroIv);metroIv=null;} updateMetro(); }
+function metroToggle() { metroOn?metroStop():metroStart(); }
+function updateMetro() { const b=document.getElementById('metroBtn'); if(b){b.textContent=metroOn?'⏸️ Metrónomo':'🔊 Metrónomo';b.className=metroOn?'on':'';} }
+window._metro = metroToggle;
 
 /* ── Timer ── */
-function stopTimer() {
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  timerRunning = false;
+function stopT() { if(tIv){clearInterval(tIv);tIv=null;} tRun=false; }
+function uiT() { const e=document.getElementById('tDisplay'); if(!e)return; e.textContent=fmt(tSec); e.className='val'+(tEnd?' end':'')+(tRun?' run':''); }
+function uiC(run) { const e=document.getElementById('tCtrls'); if(!e)return; const s=sec(exs[idx].descanso); e.innerHTML=run?'<button onclick="w._p()">Pausa</button><button class="prim" onclick="w._sk('+s+')">Saltar</button>':'<button class="prim" onclick="w._st('+tSec+')">'+(tEnd?'Repetir':'Iniciar')+'</button><button onclick="w._rs('+s+')">Repor</button>'; }
+window.w={_st(s){stopT();tSec=s;tEnd=false;tRun=true;uiT();uiC(true);tIv=setInterval(()=>{if(tSec<=0){stopT();tEnd=true;uiT();uiC(false);if(navigator.vibrate)navigator.vibrate([200,100,200,100,400]);return}tSec--;uiT()},1000)},_p(){stopT();uiT();uiC(false)},_rs(s){stopT();tSec=s;tEnd=false;uiT();uiC(false)},_sk(s){stopT();tSec=0;tEnd=true;uiT();uiC(false)}};
+
+/* ── Flow ── */
+function markDone() { const s=load(d); s[exs[idx].id]=true; save(d,s); render(); }
+function nextEx() {
+  if (idx < exs.length-1) { idx++; stopT(); metroStop(); tSec=sec(exs[idx-1].descanso); tEnd=false; render(); window.w._st(tSec); }
+  else finish();
 }
+function finish() { stopT(); metroStop(); if(actx){actx.close();actx=null;} const s=load(d); const total=exs.length; const done=exs.filter(e=>s[e.id]).length;
+  document.getElementById('app').innerHTML='<div class="wo"><div class="wo-top"><a class="wo-back" href="/">&lsaquo;</a></div><div class="wo-end"><div class="big">'+(done===total?'🔥':'💪')+'</div><h2>Treino terminado</h2><p>'+done+' de '+total+' exercícios concluídos</p><a href="/">Voltar ao início</a></div></div>'; }
 
-function updateTimerUI() {
-  const display = document.getElementById('timerDisplay');
-  if (!display) return;
-  display.textContent = buildTimerHTML(timerSeconds);
-  display.classList.remove('running', 'done');
-  if (timerSeconds === 0 && timerDone) display.classList.add('done');
-  else if (timerRunning) display.classList.add('running');
-}
-
-function renderTimerCtrls(running) {
-  const ctrls = document.getElementById('timerCtrls');
-  if (!ctrls) return;
-  const rest = parseSegundos(exercises[currentIdx].descanso);
-  if (running) {
-    ctrls.innerHTML =
-      '<button onclick="window.woPause()">Pausa</button>' +
-      '<button class="primary" onclick="window.woSkip(' + rest + ')">Saltar</button>';
-  } else {
-    ctrls.innerHTML =
-      '<button class="primary" onclick="window.woStart(' + timerSeconds + ')">' + (timerDone ? 'Repetir' : 'Iniciar') + '</button>' +
-      '<button onclick="window.woReset(' + rest + ')">Repor</button>';
-  }
-}
-
-window.woStart = function(s) {
-  stopTimer();
-  timerSeconds = s;
-  timerDone = false;
-  timerRunning = true;
-  updateTimerUI();
-  renderTimerCtrls(true);
-  timerInterval = setInterval(() => {
-    if (timerSeconds <= 0) {
-      stopTimer();
-      timerDone = true;
-      updateTimerUI();
-      renderTimerCtrls(false);
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
-      return;
-    }
-    timerSeconds--;
-    updateTimerUI();
-  }, 1000);
-};
-
-window.woPause = function() { stopTimer(); updateTimerUI(); renderTimerCtrls(false); };
-
-window.woReset = function(s) { stopTimer(); timerSeconds = s; timerDone = false; updateTimerUI(); renderTimerCtrls(false); };
-
-window.woSkip = function(s) { stopTimer(); timerSeconds = 0; timerDone = true; updateTimerUI(); renderTimerCtrls(false); };
-
-/* ── Workout flow ── */
-function markDone() {
-  const state = loadDay(workoutDate);
-  state[exercises[currentIdx].id] = true;
-  saveDay(workoutDate, state);
-  render();
-}
-
-function nextExercise() {
-  if (currentIdx < exercises.length - 1) {
-    currentIdx++;
-    stopTimer();
-    stopMetronome();
-    const rest = parseSegundos(exercises[currentIdx - 1].descanso);
-    timerSeconds = rest;
-    timerDone = false;
-    render();
-    // Auto-start rest timer for the PREVIOUS exercise's rest
-    window.woStart(rest);
-  } else {
-    // All done
-    finishWorkout();
-  }
-}
-
-function finishWorkout() {
-  stopTimer();
-  stopMetronome();
-  if (audioCtx) { audioCtx.close(); audioCtx = null; }
-  const state = loadDay(workoutDate);
-  const total = exercises.length;
-  const done = exercises.filter(ex => state[ex.id]).length;
+/* ── Render ── */
+function render() {
+  const ex = exs[idx], st = load(d), done = !!st[ex.id];
+  const total = exs.length, completed = exs.filter(e=>st[e.id]).length, isLast = idx===total-1;
+  const rest = sec(ex.descanso);
 
   document.getElementById('app').innerHTML =
-    '<div class="workout-wrap">' +
-    '<div class="wo-topbar"><a class="wo-back" href="/">&lsaquo;</a></div>' +
-    '<div class="finish-screen">' +
-      '<div class="big">' + (done === total ? '🔥' : '💪') + '</div>' +
-      '<h2>Treino terminado</h2>' +
-      '<p>' + done + ' de ' + total + ' exercícios concluídos</p>' +
-      '<a href="/">Voltar ao início</a>' +
+    '<div class="wo"><div class="wo-top"><a class="wo-back" href="/">&lsaquo;</a><span style="font-size:12px;color:var(--muted);margin-left:auto">Treino</span></div>'+
+    '<div class="wo-count">'+completed+' de '+total+' concluídos</div>'+
+    '<div class="wo-bar"><div class="wo-bar-fill" style="width:'+(completed/total*100)+'%"></div></div>'+
+    '<div class="wo-main">'+
+      '<div class="wo-card"><h2>'+ex.n+'</h2><div class="ser">'+ex.series+'</div><div class="how">'+ex.comoFazer+'</div></div>'+
+      '<div class="wo-side">'+
+        '<div class="wo-timer"><div class="lbl">⏱️ Descanso</div><div class="val" id="tDisplay">'+fmt(tSec||rest)+'</div><div class="ctrls" id="tCtrls"><button class="prim" onclick="w._st('+rest+')">Iniciar</button><button onclick="w._rs('+rest+')">Repor</button></div></div>'+
+        '<div class="wo-metro"><button id="metroBtn" onclick="_metro()">🔊 Metrónomo</button><div class="metro-dot" id="metroDot"></div></div>'+
+        '<div class="wo-act">'+
+          (done?'<div class="wo-check">✅ Feito</div>':'<button class="wo-done" id="btnDone">Marcar como feito</button>')+
+          (done?(isLast?'<button class="wo-fin" id="btnFin">🏁 Terminar treino</button>':'<button class="wo-next" id="btnNext">Próximo exercício ›</button>'):'')+
+        '</div>'+
+      '</div>'+
     '</div></div>';
+
+  if(!done) document.getElementById('btnDone').onclick = () => { stopT(); markDone(); };
+  else if(isLast) document.getElementById('btnFin').onclick = finish;
+  else document.getElementById('btnNext').onclick = nextEx;
 }
 
-function render() {
-  const ex = exercises[currentIdx];
-  const state = loadDay(workoutDate);
-  const done = !!state[ex.id];
-  const total = exercises.length;
-  const completed = exercises.filter(e => state[e.id]).length;
-  const isLast = currentIdx === total - 1;
-  const rest = parseSegundos(ex.descanso);
-
-  const app = document.getElementById('app');
-  app.innerHTML =
-    '<div class="workout-wrap">' +
-      /* topbar */
-      '<div class="wo-topbar">' +
-        '<a class="wo-back" href="/" aria-label="Sair do treino">&lsaquo;</a>' +
-        '<span style="font-size:12px;color:var(--text-muted);margin-left:auto;">Treino</span>' +
-      '</div>' +
-
-      /* progress */
-      '<div class="wo-counter">' + completed + ' de ' + total + ' concluídos</div>' +
-      '<div class="wo-progress"><div class="wo-progress-fill" style="width:' + (completed / total * 100) + '%"></div></div>' +
-
-      /* main: card + side */
-      '<div class="wo-main">' +
-        /* exercise card */
-        '<div class="wo-card">' +
-          '<h2>' + ex.n + '</h2>' +
-          '<div class="wo-series">' + ex.series + '</div>' +
-          '<div class="wo-how">' + ex.comoFazer + '</div>' +
-        '</div>' +
-
-        /* side panel */
-        '<div class="wo-side">' +
-          /* timer */
-          '<div class="wo-timer">' +
-            '<div class="wo-timer-label">⏱️ Descanso</div>' +
-            '<div class="wo-timer-display" id="timerDisplay">' + buildTimerHTML(timerSeconds || rest) + '</div>' +
-            '<div class="wo-timer-ctrls" id="timerCtrls">' +
-              '<button class="primary" onclick="window.woStart(' + rest + ')">Iniciar</button>' +
-              '<button onclick="window.woReset(' + rest + ')">Repor</button>' +
-            '</div>' +
-          '</div>' +
-
-          /* metronome */
-          '<div class="wo-metronome">' +
-            '<button id="metroBtn" onclick="toggleMetronome()">🔊 Metrónomo</button>' +
-            '<div class="metronome-dot" id="metroDot"></div>' +
-          '</div>' +
-
-          /* actions */
-          '<div class="wo-actions">' +
-            (done
-              ? '<div class="wo-done-check">✅ Feito</div>'
-              : '<button class="wo-btn wo-btn-done" id="btnDone">Marcar como feito</button>') +
-            (!done
-              ? ''
-              : (isLast
-                ? '<button class="wo-btn wo-btn-finish" id="btnFinish">🏁 Terminar treino</button>'
-                : '<button class="wo-btn wo-btn-next" id="btnNext">Próximo exercício ›</button>')) +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-
-  // Attach events
-  if (!done) {
-    document.getElementById('btnDone').addEventListener('click', () => {
-      stopTimer();
-      markDone();
-    });
-  } else if (isLast) {
-    document.getElementById('btnFinish').addEventListener('click', finishWorkout);
-  } else {
-    document.getElementById('btnNext').addEventListener('click', nextExercise);
-  }
-
-  // Expose toggleMetronome globally for inline onclick
-  window.toggleMetronome = toggleMetronome;
-}
-
-function initWorkout() {
-  if (timerSeconds === 0) {
-    timerSeconds = parseSegundos(exercises[0].descanso);
-  }
-  render();
-}
+function init() { tSec = sec(exs[0].descanso); render(); }
