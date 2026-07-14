@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Treino — Rotina</title>
+<meta name="theme-color" content="#18181b">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rotina">
+<link rel="stylesheet" href="/src/style.css">
+<style>
+  .wo{max-width:500px;margin:0 auto;padding:1rem 1rem 2rem;min-height:100vh;display:flex;flex-direction:column}
+  .wo-top{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
+  .wo-back{width:36px;height:36px;border-radius:var(--rs);background:0;border:1px solid var(--border);color:var(--text);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0;transition:background .12s}
+  .wo-back:active{background:var(--surface2)}
+  .wo-count{text-align:center;font-size:12px;color:var(--muted);margin-bottom:.5rem;letter-spacing:.02em}
+  .wo-bar{height:4px;background:var(--border);border-radius:2px;margin-bottom:1rem;overflow:hidden}
+  .wo-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),#e88a5a);transition:width .35s cubic-bezier(.4,0,.2,1)}
+  .wo-main{display:flex;flex-direction:column;gap:1rem;flex:1}
+  .wo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem 1.1rem;display:flex;flex-direction:column}
+  .wo-card h2{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:0 0 .3rem;line-height:1.2}
+  .wo-card .ser{font-size:13px;color:var(--text2);margin-bottom:.75rem}
+  .wo-card .how{font-size:14px;line-height:1.5}
+  .wo-side{display:flex;flex-direction:column;gap:.75rem}
+  .wo-timer{text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+  .wo-timer .lbl{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .wo-timer .val{font-size:42px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;transition:color .3s}
+  .wo-timer .val.run{color:var(--accent)}.wo-timer .val.end{color:var(--gold)}
+  .wo-timer .ctrls{display:flex;gap:6px;justify-content:center;margin-top:8px}
+  .wo-timer .ctrls button{padding:.45rem .9rem;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-weight:550;cursor:pointer;transition:all .12s}
+  .wo-timer .ctrls button.prim{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .wo-timer .ctrls button.prim:active{background:#c5612e}
+  .wo-metro{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.6rem}
+  .wo-metro button{padding:.4rem .8rem;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:550;cursor:pointer;transition:all .12s}
+  .wo-metro button.on{background:var(--accent-bg);border-color:var(--accent-dim);color:#ee9b6e}
+  .metro-dot{width:16px;height:16px;border-radius:50%;background:var(--border);transition:all .15s}
+  .metro-dot.beat{background:var(--accent);transform:scale(1.5);box-shadow:0 0 12px rgba(217,112,62,.5)}
+  .wo-act{display:flex;flex-direction:column;gap:8px}
+  .wo-act button{width:100%;padding:.85rem;border-radius:var(--r);border:none;font-size:15px;font-weight:650;cursor:pointer;text-align:center;transition:all .15s}
+  .wo-done{background:var(--accent);color:#fff}.wo-done:active{background:#c5612e;transform:scale(.98)}
+  .wo-next{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.wo-next:active{background:var(--border2)}
+  .wo-fin{background:var(--gold);color:var(--bg)}.wo-fin:active{background:#b88a44}
+  .wo-check{text-align:center;font-size:12px;color:var(--gold);padding:.3rem 0}
+  .wo-end{text-align:center;padding:3rem 1rem}
+  .wo-end .big{font-size:48px;margin-bottom:.75rem}
+  .wo-end h2{font-size:20px;margin:0 0 .5rem}
+  .wo-end p{color:var(--text2);margin-bottom:1.5rem;font-size:14px}
+  .wo-end a{display:inline-block;padding:.75rem 2rem;background:var(--accent);color:#fff;border-radius:var(--r);text-decoration:none;font-weight:600;font-size:15px}
+  @media(orientation:landscape),(min-width:768px){.wo{max-width:900px}.wo-main{flex-direction:row}.wo-card{flex:1.2}.wo-side{flex:.8}.wo-card h2{font-size:18px}.wo-timer .val{font-size:48px}}
+</style>
+</head>
+<body><div id="app"></div>
+<script type="module" src="/src/treino.js"></script>
+</body>
+</html>
