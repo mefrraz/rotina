@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Rotina — Alimentação & Treino</title>
+<meta name="theme-color" content="#18181b">
+<meta name="description" content="Regista as tuas refeições e exercícios diários">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rotina">
+<!-- iOS Splash Screens -->
+<link rel="apple-touch-startup-image" href="/icons/icon-512.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/icons/icon-512.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/icons/icon-512.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/icons/icon-512.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/icons/icon-512.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/icons/icon-512.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/icons/icon-512.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/icons/icon-512.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true"></div>
+      <div>
+        <h1>Rotina</h1>
+        <div class="sub">alimentação &amp; treino</div>
+      </div>
+    </div>
+    <div class="streak-badge" id="streakBadge" title="Dias consecutivos com +80% das refeições">
+      <span class="fire">🔥</span>
+      <span id="streakCount">0</span>
+    </div>
+  </header>
+
+  <div class="install-banner" id="installBanner">
+    <span>Instala esta app no teu telemóvel</span>
+    <button id="installBtn">Instalar</button>
+  </div>
+
+  <div class="day-nav">
+    <button id="prevDay" aria-label="Dia anterior">‹</button>
+    <div class="day-info">
+      <div class="day" id="dayLabel"></div>
+      <div class="date" id="dateLabel"></div>
+    </div>
+    <button id="nextDay" aria-label="Dia seguinte">›</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Refeições</div>
+      <div class="value" id="mealScore">0 <span class="of">/6</span></div>
+      <div class="bar"><div class="bar-fill" id="mealBar" style="width:0%"></div></div>
+    </div>
+    <div class="stat">
+      <div class="label">Exercícios</div>
+      <div class="value" id="exScore">0 <span class="of">/0</span></div>
+      <div class="bar"><div class="bar-fill" id="exBar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="weekly" id="weeklyView"></div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabMeals">Alimentação</button>
+    <button class="tab" id="tabEx">Treino</button>
+    <button class="tab" id="tabProgress">Progresso</button>
+  </div>
+
+  <div class="panel active" id="mealsPanel"></div>
+  <div class="panel" id="exPanel"></div>
+  <div class="panel" id="progressPanel"></div>
+
+  <footer>Guardado neste telemóvel · funciona offline</footer>
+</div>
+
+<script type="module" src="/src/index.js"></script>
+</body>
+</html>
